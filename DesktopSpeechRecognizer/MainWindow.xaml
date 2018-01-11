@@ -15,21 +15,24 @@
                     Click="SaveKey_Click">Save Key</Button>
             <TextBox VerticalAlignment="Stretch"
                      HorizontalAlignment="Stretch"
-                     Padding="5"
-                     Text="{Binding ElementName=_mainWindow, Path=SubscriptionKey, Mode=TwoWay}" />
+                     Text="{Binding Path=SubscriptionKey, Mode=TwoWay}"
+                     Padding="5" />
         </DockPanel>
+        <CheckBox IsChecked="{Binding Path=AutoRestart}"
+                  DockPanel.Dock="Bottom"
+                  Content="Automatically Restart" />
         <Button x:Name="_startButton"
                 Content="Start _Recognition"
+                IsEnabled="{Binding Path=StartButtonEnabled}"
                 Click="StartButton_Click"
                 DockPanel.Dock="Bottom"
                 Padding="5" />
-        <TextBox x:Name="_logText"
-                 Grid.Row="1"
+        <TextBox Grid.Row="1"
                  Grid.Column="1"
                  HorizontalAlignment="Stretch"
                  VerticalAlignment="Stretch"
                  TextWrapping="Wrap"
-                 Text=""
+                 Text="{Binding Path=DisplayText, Mode=OneWay}"
                  VerticalScrollBarVisibility="Visible" />
     </DockPanel>
 </Window>

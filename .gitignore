@@ -4,5 +4,10 @@
 /SubtitlesForReality.Editor.csproj
 /SubtitlesForReality.Plugins.csproj
 /SubtitlesForReality.sln
+/DesktopSpeechRecognizer/bin/
+/DesktopSpeechRecognizer/obj/
+/DesktopSpeechRecognizer/packages/
+/DesktopSpeechRecognizer/.vs/
+/SpeechLog/
 /Packages/
 /.vs/
