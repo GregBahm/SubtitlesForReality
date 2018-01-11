@@ -12,14 +12,18 @@ using System.Collections.Specialized;
 
 public class TestScript : MonoBehaviour
 {
-    public bool Do;
+    public bool SendToCloud;
     public string ResponseString;
-    public TextAsset testText;
+    private AudioSource audioSource;
 
     void Start()
     {
-        AudioSource audio = GetComponent<AudioSource>();
-        audio.clip = Microphone.Start(null, true, 15, 16000);
+        audioSource = GetComponent<AudioSource>();
+        AudioClip clip = new AudioClip();
+        
+        audioSource.clip = Microphone.Start(null, true, 1, 16000);
+        //while (!(Microphone.GetPosition(null) > 0)) { }
+        audioSource.Play();
 
         ServicePointManager.ServerCertificateValidationCallback = CertificateValidationCallBack; // This voodoo is necessary so that Unity can do certifications
         SpeechServerAuthenticator authenticator = new SpeechServerAuthenticator("8acd5da4fcc84791a4be9159f9296895");
@@ -28,9 +32,9 @@ public class TestScript : MonoBehaviour
 
     private void Update()
     {
-        if(Do)
+        if(SendToCloud)
         {
-            Do = false;
+            SendToCloud = false;
             communicator.DoTheThing();
         }
         ResponseString = communicator.ResponseString;
