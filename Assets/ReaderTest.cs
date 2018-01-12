@@ -33,10 +33,7 @@ public class ReaderTest : MonoBehaviour
             string log = GetLog(e.FullPath);
             string latestLine = log.Split('\n').First();
             string[] components = latestLine.Split(':');
-
-            Debug.Log(components);
-            Debug.Log(components[0]);
-            Debug.Log(components[1]);
+            
             long timeCode = Convert.ToInt64(components[0]);
             string text = components[1];
             newMoment = e.ChangeType == WatcherChangeTypes.Created;

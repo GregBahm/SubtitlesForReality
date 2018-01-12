@@ -8,6 +8,15 @@
 /DesktopSpeechRecognizer/obj/
 /DesktopSpeechRecognizer/packages/
 /DesktopSpeechRecognizer/.vs/
+
+
+/SpeechClientWrapper/bin/
+/SpeechClientWrapper/obj/
+/DesktopSpeechRecognizer/ClientWrapeprTester/bin/
+/DesktopSpeechRecognizer/ClientWrapeprTester/obj/
+/DesktopSpeechRecognizer/ClientWrapeprTester/packages/
+/DesktopSpeechRecognizer/ClientWrapeprTester/.vs/
+
 /SpeechLog/
 /Packages/
 /.vs/
