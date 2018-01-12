@@ -18,17 +18,6 @@
 
         private SpeechLogger _logger;
         private MicrophoneRecognitionClient _micClient;
-
-        private bool _autoRestart;
-        public bool AutoRestart
-        {
-            get{ return _autoRestart; }
-            set
-            {
-                _autoRestart = value;
-                OnPropertyChanged(nameof(AutoRestart));
-            }
-        }
         
         private string DefaultLocale
         {
@@ -64,18 +53,43 @@
             get{ return _displayText.ToString(); }
         }
 
+        public string RecordingLabel
+        {
+            get
+            {
+                return Recording ? "Stop Recording" : "Start Recording";
+            }
+        }
+
         private bool _recording;
         public bool Recording
         {
             get { return _recording; }
             set
             {
+                if (_recording== value)
+                {
+                    return;
+                }
                 _recording = value;
+                if(value)
+                {
+                    StartRecordingSession();
+                }
+                else
+                {
+                    StopRecording();
+                }
                 OnPropertyChanged(nameof(Recording));
-                OnPropertyChanged(nameof(StartButtonEnabled));
+                OnPropertyChanged(nameof(RecordingLabel));
             }
         }
-        public bool StartButtonEnabled { get{ return !Recording; } }
+
+        private void StopRecording()
+        {
+            _micClient.EndMicAndRecognition();
+            Recording = false;
+        }
 
         private Dispatcher Dispatcher { get; }
 
@@ -84,7 +98,6 @@
             Dispatcher = dispatcher;
             _displayText = new StringBuilder();
             _logger = new SpeechLogger();
-            AutoRestart = true;
         }
 
         public void StartRecordingSession()
@@ -157,13 +170,12 @@
 
                 WriteResponseResult(e);
 
-                Recording = false;
                 if (e.PhraseResponse.Results.Any())
                 {
                     _logger.UpdateLog(e.PhraseResponse.Results[0].DisplayText);
                 }
 
-                if(AutoRestart)
+                if(Recording)
                 {
                     StartRecordingSession();
                 }
@@ -173,7 +185,10 @@
         {
             Dispatcher.Invoke(() =>
             {
+                if (Recording)
+                {
                 StartRecordingSession();
+                }
             });
 
             this.WriteLine("--- Error received by OnConversationErrorHandler() ---");

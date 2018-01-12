@@ -55,11 +55,6 @@
             _viewModel.SubscriptionKey = GetSubscriptionKeyFromIsolatedStorage();
         }
 
-        private void StartButton_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.StartRecordingSession();
-        }
-
 
         private string GetSubscriptionKeyFromIsolatedStorage()
         {

@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ReaderTest : MonoBehaviour 
 {
+    public Transform Camera;
     private FileSystemWatcher watcher;
     private string logOutputFolder;
     private bool newMoment;
@@ -63,7 +65,14 @@ public class ReaderTest : MonoBehaviour
             improvedMoment = false;
             CreateNewMoment(latestMoment);
         }
+        LookAtCamera();
 	}
+
+    private void LookAtCamera()
+    {
+        Vector3 target = new Vector3(Camera.position.x, transform.position.y, Camera.position.z);
+        transform.LookAt(target, Vector3.up);
+    }
 
     private void CreateNewMoment(TextMoment newMoment)
     {
@@ -72,8 +81,12 @@ public class ReaderTest : MonoBehaviour
             subtitles.Last().gameObject.SetActive(false);
         }
         GameObject newSubtitleObject = new GameObject("Subtitle " + newMoment.Timecode);
-        TextMesh textMesh = newSubtitleObject.AddComponent<TextMesh>();
-        textMesh.fontSize = 72;
+        newSubtitleObject.transform.rotation = Quaternion.Euler(0, 180, 0);
+        newSubtitleObject.transform.SetParent(transform, false);
+        TextMeshPro textMesh = newSubtitleObject.AddComponent<TextMeshPro>();
+        textMesh.rectTransform.sizeDelta = new Vector2(1, .24f);
+        textMesh.fontSize = .5f;
+        textMesh.alignment = TextAlignmentOptions.BottomLeft;
         Subtitle subtitleBehavior = newSubtitleObject.AddComponent<Subtitle>();
         subtitleBehavior.TextHistory = new List<TextMoment>();
         subtitleBehavior.EarliestTime = newMoment.Timecode;
@@ -103,16 +116,32 @@ public class ReaderTest : MonoBehaviour
 }
 public class Subtitle : MonoBehaviour
 {
-    public TextMesh TextObject;
+    public TextMeshPro TextObject;
     public List<TextMoment> TextHistory;
     public long EarliestTime;
     public long LatestTime;
+
+    public const float DefaultOpacity = 3;
+    public const float OpacityFade = 0.01f;
+    public float Opacity;
+
+    private void Start()
+    {
+        Opacity = DefaultOpacity;
+    }
 
     public void AddTextMoment(TextMoment moment)
     {
         TextHistory.Add(moment);
         LatestTime = moment.Timecode;
         TextObject.text = moment.Text;
+        Opacity = DefaultOpacity;
+    }
+
+    private void Update()
+    {
+        Opacity -= OpacityFade;
+        TextObject.color = new Color(1, 1, 1, Mathf.Min(Opacity, 1));
     }
 }
 
