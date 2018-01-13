@@ -9,21 +9,24 @@ using UnityEngine.UI;
 
 public class ReaderTest : MonoBehaviour 
 {
+    private TextMoment _enquedMoment;
+    private TextMeshPro _textMesh; 
     public Transform Camera;
-    private FileSystemWatcher watcher;
-    private string logOutputFolder;
-    private bool newMoment;
-    private bool improvedMoment;
-    private List<Subtitle> subtitles;
-    private TextMoment latestMoment;
+    private FileSystemWatcher _watcher;
+    private string _logOutputFolder;
+    private bool _newMoment;
+    private bool _improvedMoment;
+    private List<Subtitle> _subtitles;
+    private Subtitle _latestSubtitle;
  
     void Start () 
     {
-        subtitles = new List<Subtitle>();
-        logOutputFolder = Directory.GetParent(Application.dataPath) + @"\SpeechLog\";
-        watcher = new FileSystemWatcher(logOutputFolder);
-        watcher.Changed += Watcher_Changed;
-        watcher.EnableRaisingEvents = true;
+        _textMesh = GetComponent<TextMeshPro>();
+        _subtitles = new List<Subtitle>();
+        _logOutputFolder = Directory.GetParent(Application.dataPath) + @"\SpeechLog\";
+        _watcher = new FileSystemWatcher(_logOutputFolder);
+        _watcher.Changed += Watcher_Changed;
+        _watcher.EnableRaisingEvents = true;
 	}
 
     private void Watcher_Changed(object sender, FileSystemEventArgs e)
@@ -36,31 +39,35 @@ public class ReaderTest : MonoBehaviour
             
             long timeCode = Convert.ToInt64(components[0]);
             string text = components[1];
-            newMoment = e.ChangeType == WatcherChangeTypes.Created;
-            improvedMoment = e.ChangeType == WatcherChangeTypes.Changed;
-            latestMoment = new TextMoment(timeCode, text);
+            _newMoment = e.ChangeType == WatcherChangeTypes.Created;
+            _improvedMoment = e.ChangeType == WatcherChangeTypes.Changed;
+            _enquedMoment = new TextMoment(timeCode, text);
         }
     }
 
     private void OnDestroy()
     {
-        watcher.EnableRaisingEvents = false;
-        watcher.Dispose();
+        _watcher.EnableRaisingEvents = false;
+        _watcher.Dispose();
     }
 
     void Update () 
     {
-        if(newMoment)
+        if(_newMoment)
         {
-            TextMoment moment = latestMoment;
-            newMoment = false;
+            TextMoment moment = _enquedMoment;
+            _newMoment = false;
             ImproveMoment(moment);
         }
-        if(improvedMoment)
+        if(_improvedMoment)
         {
-            TextMoment moment = latestMoment;
-            improvedMoment = false;
-            CreateNewMoment(latestMoment);
+            TextMoment moment = _enquedMoment;
+            _improvedMoment = false;
+            CreateNewMoment(moment);
+        }
+        if (_latestSubtitle != null)
+        {
+            _textMesh.text = _latestSubtitle.LatestMoment.Text;
         }
         LookAtCamera();
 	}
@@ -69,32 +76,19 @@ public class ReaderTest : MonoBehaviour
     {
         Vector3 target = new Vector3(Camera.position.x, transform.position.y, Camera.position.z);
         transform.LookAt(target, Vector3.up);
+        transform.Rotate(0, 180, 0);
     }
 
     private void CreateNewMoment(TextMoment newMoment)
     {
-        if(subtitles.Any())
-        {
-            subtitles.Last().gameObject.SetActive(false);
-        }
-        GameObject newSubtitleObject = new GameObject("Subtitle " + newMoment.Timecode);
-        newSubtitleObject.transform.rotation = Quaternion.Euler(0, 180, 0);
-        newSubtitleObject.transform.SetParent(transform, false);
-        TextMeshPro textMesh = newSubtitleObject.AddComponent<TextMeshPro>();
-        textMesh.rectTransform.sizeDelta = new Vector2(1, .24f);
-        textMesh.fontSize = .5f;
-        textMesh.alignment = TextAlignmentOptions.BottomLeft;
-        Subtitle subtitleBehavior = newSubtitleObject.AddComponent<Subtitle>();
-        subtitleBehavior.TextHistory = new List<TextMoment>();
-        subtitleBehavior.EarliestTime = newMoment.Timecode;
-        subtitleBehavior.TextObject = textMesh;
-        subtitleBehavior.AddTextMoment(newMoment);
-        subtitles.Add(subtitleBehavior);
+        Subtitle subtitle = new Subtitle(newMoment);
+        _subtitles.Add(subtitle);
+        _latestSubtitle = subtitle;
     }
 
     private void ImproveMoment(TextMoment latestMoment)
     {
-        subtitles.Last().AddTextMoment(latestMoment);
+        _latestSubtitle.AddTextMoment(latestMoment);
     }
 
     private string GetLog(string path)
@@ -111,34 +105,26 @@ public class ReaderTest : MonoBehaviour
         }
     }
 }
-public class Subtitle : MonoBehaviour
+public class Subtitle
 {
-    public TextMeshPro TextObject;
-    public List<TextMoment> TextHistory;
-    public long EarliestTime;
-    public long LatestTime;
+    private TextMoment _latestMoment;
+    public TextMoment LatestMoment { get{ return _latestMoment; } }
 
-    public const float DefaultOpacity = 3;
-    public const float OpacityFade = 0.01f;
-    public float Opacity;
+    private readonly List<TextMoment> _textHistory;
+    public List<TextMoment> TextHistory { get{ return _textHistory; } }
+    public long EarliestTime { get { return _textHistory[0].Timecode; } }
+    public long LatestTime { get { return _latestMoment.Timecode; } }
 
-    private void Start()
+    public Subtitle(TextMoment firstMoment)
     {
-        Opacity = DefaultOpacity;
+        _textHistory = new List<TextMoment>() { firstMoment };
+        _latestMoment = firstMoment;
     }
 
     public void AddTextMoment(TextMoment moment)
     {
-        TextHistory.Add(moment);
-        LatestTime = moment.Timecode;
-        TextObject.text = moment.Text;
-        Opacity = DefaultOpacity;
-    }
-
-    private void Update()
-    {
-        Opacity -= OpacityFade;
-        TextObject.color = new Color(1, 1, 1, Mathf.Min(Opacity, 1));
+        _textHistory.Add(moment);
+        _latestMoment = moment;
     }
 }
 
